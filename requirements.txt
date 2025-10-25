@@ -6,3 +6,6 @@ streamlit-folium
 plotly
 numpy
 shapely
+fiona
+pyproj
+rtree
