@@ -10,4 +10,4 @@ fiona
 pyproj
 rtree
 sqlite3
-hashlib
+
