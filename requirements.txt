@@ -9,6 +9,3 @@ shapely
 fiona
 pyproj
 rtree
-sqlite3-binary
-
-
