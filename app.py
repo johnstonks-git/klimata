@@ -176,6 +176,23 @@ def build_dashboard(gdf, df2):
     # City Overview
     # =====================
     if selected == "City Overview":
+        # Add background image for City Overview
+        background_image_url = "https://www.detourista.com/wp/wp-content/uploads/Tax-Place/Philippines/Iloilo/Iloilo/Featured/001-Calle-Real-in-Iloilo-City-150105-063819.jpg"
+        
+        city_overview_bg = f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), 
+                              url("{background_image_url}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }}
+        </style>
+        """
+        st.markdown(city_overview_bg, unsafe_allow_html=True)
+        
         st.title("Iloilo City: Climate Vulnerability Index")
 
         # Sidebar map selector
@@ -481,6 +498,94 @@ def show_login_page():
 
 
 def show_signup_page():
+    # Add background image for Sign Up page
+    background_image_url = "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/ff/86/7b/pictures-at-the-iloilo.jpg?w=1200&h=-1&s=1"
+    
+    signup_bg = f"""
+    <style>
+    /* Full page background */
+    [data-testid="stAppViewContainer"] {{
+        background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+                          url("{background_image_url}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+    }}
+    
+    /* Hide header background */
+    [data-testid="stHeader"] {{
+        background: rgba(0,0,0,0);
+    }}
+    
+    /* Hide sidebar */
+    [data-testid="stSidebar"] {{
+        display: none;
+    }}
+    
+    /* Center the form */
+    .block-container {{
+        max-width: 500px !important;
+        padding-top: 5rem !important;
+    }}
+    
+    /* Glass effect card */
+    div[data-testid="stVerticalBlock"] > div:first-child {{
+        background: rgba(255, 255, 255, 0.1);
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }}
+    
+    /* Black text for title */
+    h1 {{
+        color: black !important;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+        font-weight: bold;
+    }}
+    
+    h2, h3 {{
+        color: black !important;
+    }}
+    
+    /* Style labels */
+    label {{
+        color: black !important;
+        font-weight: 600;
+    }}
+    
+    /* Style inputs */
+    .stTextInput > div > div > input {{
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 8px;
+        color: black !important;
+    }}
+    
+    /* Style buttons */
+    .stButton > button {{
+        width: 100%;
+        background-color: #00ADB5;
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+    }}
+    
+    .stButton > button:hover {{
+        background-color: #008C94;
+    }}
+    
+    /* Style error/success messages */
+    .stAlert {{
+        background-color: rgba(255, 255, 255, 0.95) !important;
+    }}
+    </style>
+    """
+    st.markdown(signup_bg, unsafe_allow_html=True)
+    
     st.title("Create a New Account")
     with st.form("signup_form"):
         username = st.text_input("New Username")
@@ -504,6 +609,24 @@ def show_signup_page():
         st.rerun()
 
 def show_manage_account_page():
+    # Add background image for Manage Account page
+    background_image_url = "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/ff/86/7b/pictures-at-the-iloilo.jpg?w=1200&h=-1&s=1"
+    
+    manage_bg = f"""
+    <style>
+    /* Full page background */
+    [data-testid="stAppViewContainer"] {{
+        background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), 
+                          url("{background_image_url}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+    }}
+    </style>
+    """
+    st.markdown(manage_bg, unsafe_allow_html=True)
+    
     st.title(f"Manage Account: {st.session_state['username']}")
     if st.sidebar.button("Back to Dashboard"):
         st.session_state.page = "Dashboard"
