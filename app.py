@@ -276,6 +276,23 @@ def build_dashboard(gdf, df2):
     # Barangay Deep Dive
     # =====================
     elif selected == "Barangay Deep Dive":
+        # Add background image for Barangay Deep Dive
+        background_image_url = "https://www.detourista.com/wp/wp-content/uploads/Tax-Place/Philippines/Iloilo/Iloilo/Featured/001-Calle-Real-in-Iloilo-City-150105-063819.jpg"
+        
+        deep_dive_bg = f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), 
+                              url("{background_image_url}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }}
+        </style>
+        """
+        st.markdown(deep_dive_bg, unsafe_allow_html=True)
+        
         st.title("Barangay Deep Dive")
         brgy_list = sorted(gdf['barangay_name'].dropna().unique())
 
