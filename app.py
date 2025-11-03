@@ -391,17 +391,30 @@ def show_login_page():
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }}
     
-    /* White text for title */
+    /* Black text for title */
     h1 {{
-        color: white !important;
+        color: black !important;
         text-align: center;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+        font-weight: bold;
+    }}
+    
+    /* Style labels */
+    label {{
+        color: black !important;
+        font-weight: 600;
     }}
     
     /* Style inputs */
     .stTextInput > div > div > input {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 8px;
+        color: black !important;
+    }}
+    
+    /* Style error messages */
+    .stAlert {{
+        background-color: rgba(255, 255, 255, 0.95) !important;
     }}
     
     /* Style buttons */
