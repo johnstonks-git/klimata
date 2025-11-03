@@ -498,27 +498,6 @@ def show_login_page():
 
 
 def show_signup_page():
-    st.title("Create a New Account"){
-        width: 100%;
-        background-color: #00ADB5;
-        color: white;
-        border-radius: 8px;
-        font-weight: 600;
-        border: none;
-    }}
-    
-    .stButton > button:hover {{
-        background-color: #008C94;
-    }}
-    
-    /* Style error/success messages */
-    .stAlert {{
-        background-color: rgba(255, 255, 255, 0.95) !important;
-    }}
-    </style>
-    """
-    st.markdown(signup_bg, unsafe_allow_html=True)
-    
     st.title("Create a New Account")
     with st.form("signup_form"):
         username = st.text_input("New Username")
