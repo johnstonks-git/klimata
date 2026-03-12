@@ -6,8 +6,6 @@ from streamlit_folium import st_folium
 from shapely import wkt
 from shapely.errors import WKTReadingError
 import plotly.express as px
-import sqlite3
-import hashlib
 
 # UI libraries
 from streamlit_option_menu import option_menu
@@ -21,64 +19,6 @@ st.set_page_config(
     page_icon="🗺️",
     layout="wide"
 )
-
-# ==========================
-# DATABASE FUNCTIONS
-# ==========================
-def hash_password(password):
-    return hashlib.sha256(str.encode(password)).hexdigest()
-
-def init_db():
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        username TEXT PRIMARY KEY,
-        password_hash TEXT
-    )
-    ''')
-    conn.commit()
-    conn.close()
-
-def create_user(username, password):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    try:
-        c.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                  (username, hash_password(password)))
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
-    finally:
-        conn.close()
-
-def check_user_password(username, password):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute("SELECT password_hash FROM users WHERE username = ?", (username,))
-    data = c.fetchone()
-    conn.close()
-    if data:
-        return data[0] == hash_password(password)
-    return False
-
-def update_user_password(username, new_password):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute("UPDATE users SET password_hash = ? WHERE username = ?",
-              (hash_password(new_password), username))
-    conn.commit()
-    conn.close()
-    return True
-
-def delete_user(username):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM users WHERE username = ?", (username,))
-    conn.commit()
-    conn.close()
-    return True
 
 # ==========================
 # DATA LOADING FUNCTIONS
@@ -123,7 +63,7 @@ def build_dashboard(gdf, df2):
         df2['barangay_name'] = None
 
     dark_mode = st.sidebar.toggle("🌗 Dark Mode", value=True)
-    
+
     # Apply theme
     if dark_mode:
         st.markdown("""
@@ -148,11 +88,10 @@ def build_dashboard(gdf, df2):
 
     # Sidebar Navigation
     with st.sidebar:
-        st.markdown(f"### 👋 Welcome, {st.session_state.get('username','Guest')}")
         selected = option_menu(
             menu_title=None,
-            options=["City Overview", "Barangay Deep Dive", "Manage Account", "Log Out"],
-            icons=["house", "map", "person-lines-fill", "box-arrow-right"],
+            options=["City Overview", "Barangay Deep Dive"],
+            icons=["house", "map"],
             menu_icon="globe",
             default_index=0,
             styles={
@@ -163,26 +102,16 @@ def build_dashboard(gdf, df2):
             },
         )
 
-    if selected == "Manage Account":
-        st.session_state.page = "Manage Account"
-        st.rerun()
-    if selected == "Log Out":
-        st.session_state.logged_in = False
-        st.session_state.pop('username', None)
-        st.session_state.page = "Login"
-        st.rerun()
-
     # =====================
     # City Overview
     # =====================
     if selected == "City Overview":
-        # Add background image for City Overview
         background_image_url = "https://www.detourista.com/wp/wp-content/uploads/Tax-Place/Philippines/Iloilo/Iloilo/Featured/001-Calle-Real-in-Iloilo-City-150105-063819.jpg"
-        
-        city_overview_bg = f"""
+
+        st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
-            background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), 
+            background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)),
                               url("{background_image_url}");
             background-size: cover;
             background-position: center;
@@ -190,12 +119,10 @@ def build_dashboard(gdf, df2):
             background-repeat: no-repeat;
         }}
         </style>
-        """
-        st.markdown(city_overview_bg, unsafe_allow_html=True)
-        
+        """, unsafe_allow_html=True)
+
         st.title("Iloilo City: Climate Vulnerability Index")
 
-        # Sidebar map selector
         selected_layer = st.sidebar.radio(
             "🗺️ Select Map Layer",
             ["Urban Risk", "Population", "Amenity", "Climate Exposure"]
@@ -239,26 +166,15 @@ def build_dashboard(gdf, df2):
 
         if selected_layer == "Urban Risk":
             tooltip_fields = [
-                'barangay_name',
-                'urban_risk_index',
-                'risk_level',
-                'infra_risk',
-                'climate_exposure_score',
-                'coast_risk',
-                'ndvi_risk',
-                'pop_risk',
-                'rwi_risk'
+                'barangay_name', 'urban_risk_index', 'risk_level',
+                'infra_risk', 'climate_exposure_score', 'coast_risk',
+                'ndvi_risk', 'pop_risk', 'rwi_risk'
             ]
             tooltip_aliases = [
-                'Barangay:',
-                'Urban Risk Index:',
-                'Risk Level:',
-                'Climate Vulnerability Index:',
-                'Climate Exposure Score:',
-                'Coastal Distance Risk Score:',
-                'NDVI Risk Score:',
-                'Population Risk Score:',
-                'Relative Wealth Index (RWI) Risk Score:'
+                'Barangay:', 'Urban Risk Index:', 'Risk Level:',
+                'Climate Vulnerability Index:', 'Climate Exposure Score:',
+                'Coastal Distance Risk Score:', 'NDVI Risk Score:',
+                'Population Risk Score:', 'Relative Wealth Index (RWI) Risk Score:'
             ]
         else:
             tooltip_fields = ['barangay_name', metric_col]
@@ -293,13 +209,12 @@ def build_dashboard(gdf, df2):
     # Barangay Deep Dive
     # =====================
     elif selected == "Barangay Deep Dive":
-        # Add background image for Barangay Deep Dive
         background_image_url = "https://www.detourista.com/wp/wp-content/uploads/Tax-Place/Philippines/Iloilo/Iloilo/Featured/001-Calle-Real-in-Iloilo-City-150105-063819.jpg"
-        
-        deep_dive_bg = f"""
+
+        st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
-            background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), 
+            background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)),
                               url("{background_image_url}");
             background-size: cover;
             background-position: center;
@@ -307,9 +222,8 @@ def build_dashboard(gdf, df2):
             background-repeat: no-repeat;
         }}
         </style>
-        """
-        st.markdown(deep_dive_bg, unsafe_allow_html=True)
-        
+        """, unsafe_allow_html=True)
+
         st.title("Barangay Deep Dive")
         brgy_list = sorted(gdf['barangay_name'].dropna().unique())
 
@@ -336,7 +250,6 @@ def build_dashboard(gdf, df2):
         col3.metric("Relative Wealth Index", f"{brgy_data['rwi_mean']:.2f}")
         style_metric_cards(**metric_style, box_shadow=True)
 
-        # --- Map visualization ---
         brgy_gdf = gpd.GeoDataFrame([brgy_data], geometry='geometry', crs=gdf.crs)
         centroid = brgy_gdf.geometry.centroid.iloc[0]
         m = folium.Map(location=[centroid.y, centroid.x], zoom_start=15)
@@ -351,7 +264,6 @@ def build_dashboard(gdf, df2):
         ).add_to(m)
         st_folium(m, width='100%', height=500)
 
-        # --- Amenity Visualization ---
         st.subheader("🏫 Nearest Amenities Overview")
         brgy_amenities = df2[df2['barangay_name'] == selected_brgy]
 
@@ -377,210 +289,10 @@ def build_dashboard(gdf, df2):
         else:
             st.info("No amenity data available for this barangay.")
 
-# ==========================
-# PAGE FUNCTIONS
-# ==========================
-def show_login_page():
-    """Login page with background image from URL"""
-    
-    # Your Iloilo City background image
-    background_image_url = "https://www.detourista.com/wp/wp-content/uploads/Tax-Place/Philippines/Iloilo/Iloilo/Featured/001-Calle-Real-in-Iloilo-City-150105-063819.jpg"
-    
-    # Apply the background styling
-    page_bg_img = f"""
-    <style>
-    /* Full page background */
-    [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
-                          url("{background_image_url}");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        background-repeat: no-repeat;
-    }}
-    
-    /* Hide header completely */
-    [data-testid="stHeader"] {{
-        display: none;
-    }}
-    
-    /* Hide sidebar on login page */
-    [data-testid="stSidebar"] {{
-        display: none;
-    }}
-    
-    /* Center the login form */
-    .block-container {{
-        max-width: 500px !important;
-        padding-top: 5rem !important;
-    }}
-    
-    /* Glass effect card */
-    div[data-testid="stVerticalBlock"] > div:first-child {{
-        background: rgba(255, 255, 255, 0.1);
-        padding: 3rem 2rem;
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    }}
-    
-    /* Black text for title */
-    h1 {{
-        color: black !important;
-        text-align: center;
-        text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
-        font-weight: bold;
-    }}
-    
-    /* Style labels */
-    label {{
-        color: black !important;
-        font-weight: 600;
-    }}
-    
-    /* Style inputs */
-    .stTextInput > div > div > input {{
-        background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 8px;
-        color: black !important;
-    }}
-    
-    /* Style error messages */
-    .stAlert {{
-        background-color: rgba(255, 255, 255, 0.95) !important;
-    }}
-    
-    /* Style buttons */
-    .stButton > button {{
-        width: 100%;
-        background-color: #00ADB5;
-        color: white;
-        border-radius: 8px;
-        font-weight: 600;
-        border: none;
-    }}
-    
-    .stButton > button:hover {{
-        background-color: #008C94;
-    }}
-    
-    /* Style the divider */
-    hr {{
-        border-color: rgba(255, 255, 255, 0.3);
-    }}
-    </style>
-    """
-    
-    st.markdown(page_bg_img, unsafe_allow_html=True)
-
-    # Login form content
-    st.title("🌍 KLIMATA: Urban Risk Assessment Portal")
-    
-    with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Log In")
-
-        if submitted:
-            if check_user_password(username, password):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.session_state.page = "Dashboard"
-                st.rerun()
-            else:
-                st.error("😕 User not known or password incorrect")
-
-    st.markdown("---")
-    if st.button("Need an account? Sign Up"):
-        st.session_state.page = "Sign Up"
-        st.rerun()
-
-
-def show_signup_page():
-    st.title("Create a New Account")
-    with st.form("signup_form"):
-        username = st.text_input("New Username")
-        password = st.text_input("New Password", type="password")
-        confirm_password = st.text_input("Confirm Password", type="password")
-        submitted = st.form_submit_button("Create Account")
-        if submitted:
-            if not username or not password or not confirm_password:
-                st.error("Please fill in all fields.")
-            elif password != confirm_password:
-                st.error("Passwords do not match.")
-            else:
-                if create_user(username, password):
-                    st.success("Account created successfully! Please log in.")
-                    st.session_state.page = "Login"
-                    st.rerun()
-                else:
-                    st.error("Username already exists.")
-    if st.button("Back to Login"):
-        st.session_state.page = "Login"
-        st.rerun()
-
-def show_manage_account_page():
-    # Add background image for Manage Account page
-    background_image_url = "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/ff/86/7b/pictures-at-the-iloilo.jpg?w=1200&h=-1&s=1"
-    
-    manage_bg = f"""
-    <style>
-    /* Full page background */
-    [data-testid="stAppViewContainer"] {{
-        background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), 
-                          url("{background_image_url}");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        background-repeat: no-repeat;
-    }}
-    </style>
-    """
-    st.markdown(manage_bg, unsafe_allow_html=True)
-    
-    st.title(f"Manage Account: {st.session_state['username']}")
-    if st.sidebar.button("Back to Dashboard"):
-        st.session_state.page = "Dashboard"
-        st.rerun()
-    if st.sidebar.button("Log Out"):
-        st.session_state.logged_in = False
-        st.session_state.pop('username', None)
-        st.session_state.page = "Login"
-        st.rerun()
-    st.subheader("Change Password")
-    with st.form("update_password_form"):
-        new_password = st.text_input("New Password", type="password")
-        confirm_new_password = st.text_input("Confirm New Password", type="password")
-        submitted = st.form_submit_button("Update Password")
-        if submitted:
-            if not new_password or not confirm_new_password:
-                st.error("Please fill in both fields.")
-            elif new_password != confirm_new_password:
-                st.error("New passwords do not match.")
-            else:
-                update_user_password(st.session_state['username'], new_password)
-                st.success("Password updated successfully!")
 
 # ==========================
-# MAIN APP ROUTER
+# MAIN APP
 # ==========================
-init_db()
-
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "page" not in st.session_state:
-    st.session_state.page = "Login"
-
-if st.session_state.logged_in:
-    if st.session_state.page == "Dashboard":
-        gdf = load_data('URBAN_RISK_data.csv', encoding='latin1')
-        df2 = load_amenity_data('AMENITY_FINAL.csv')
-        build_dashboard(gdf, df2)
-    elif st.session_state.page == "Manage Account":
-        show_manage_account_page()
-else:
-    if st.session_state.page == "Login":
-        show_login_page()
-    elif st.session_state.page == "Sign Up":
-        show_signup_page()
+gdf = load_data('URBAN_RISK_data.csv', encoding='latin1')
+df2 = load_amenity_data('AMENITY_FINAL.csv')
+build_dashboard(gdf, df2)
